@@ -22,16 +22,6 @@
                                           ix=(a)=ROTATE((a),1)  \
                                         )
 
-#define HASH_MAKE_STRING(c,s)   do {    \
-        unsigned long ll;               \
-        ll=(c)->h0; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h1; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h2; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h3; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h4; (void)HOST_l2c(ll,(s));     \
-        } while (0)
-
-
 # define BODY_00_15(xi)           do {   \
         T=E+K_00_19+F_00_19(B,C,D);     \
         E=D, D=C, C=ROTATE(B,30), B=A;  \
