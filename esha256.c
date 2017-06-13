@@ -21,6 +21,15 @@ static const SHA_LONG K256[64] = {
     0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
 };
 
+#  define Sigma0(x)       (ROTATE((x),30) ^ ROTATE((x),19) ^ ROTATE((x),10))
+#  define Sigma1(x)       (ROTATE((x),26) ^ ROTATE((x),21) ^ ROTATE((x),7))
+#  define sigma0(x)       (ROTATE((x),25) ^ ROTATE((x),14) ^ ((x)>>3))
+#  define sigma1(x)       (ROTATE((x),15) ^ ROTATE((x),13) ^ ((x)>>10))
+
+#  define Ch(x,y,z)       (((x) & (y)) ^ ((~(x)) & (z)))
+#  define Maj(x,y,z)      (((x) & (y)) ^ ((x) & (z)) ^ ((y) & (z)))
+
+
 
 # define HASH_MAKE_STRING(c,s)   do {    \
         unsigned long ll;               \
@@ -59,8 +68,19 @@ int sha256_init(EVP_MD_CTX *ctx)
     c->h[7] = 0x5be0cd19UL;
     c->md_len = SHA256_DIGEST_LENGTH;
 	return 1;
-//    return SHA256_Init(ctx->md_data);
 }
+
+#   define ROUND_00_15(i,a,b,c,d,e,f,g,h)          do {    \
+        T1 += h + Sigma1(e) + Ch(e,f,g) + K256[i];      \
+        h = Sigma0(a) + Maj(a,b,c);                     \
+        d += T1;        h += T1;                } while (0)
+
+#   define ROUND_16_63(i,a,b,c,d,e,f,g,h,X)        do {    \
+        s0 = X[(i+1)&0x0f];     s0 = sigma0(s0);        \
+        s1 = X[(i+14)&0x0f];    s1 = sigma1(s1);        \
+        T1 = X[(i)&0x0f] += s0 + s1 + X[(i+9)&0x0f];    \
+        ROUND_00_15(i,a,b,c,d,e,f,g,h);         } while (0)
+
 
 static void sha256_block_data_order(SHA256_CTX *ctx, const void *in,
                                     size_t num)
@@ -254,7 +274,6 @@ int sha256_update(EVP_MD_CTX *ctx, const void *data_, size_t len)
         memcpy(p, data, len);
     }
     return 1;
-//    return SHA256_Update(ctx->md_data, data, count);
 }
 
 int sha256_final(EVP_MD_CTX *ctx, unsigned char *md)
@@ -284,5 +303,4 @@ int sha256_final(EVP_MD_CTX *ctx, unsigned char *md)
     HASH_MAKE_STRING(c, md);
 
     return 1;	
-//    return SHA256_Final(md, ctx->md_data);
 }
