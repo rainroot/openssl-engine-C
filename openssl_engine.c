@@ -71,11 +71,9 @@ static int digests(ENGINE *e, const EVP_MD **digest, const int **nids, int nid)
     case NID_sha256:
         *digest = &digest_sha256;
         break;
-#if 0
     case NID_sha512:
         *digest = &digest_sha512;
         break;
-#endif
     default:
         ok = 0;
         *digest = NULL;
@@ -110,14 +108,12 @@ static int ciphers(ENGINE *e, const EVP_CIPHER **cipher, const int **nids, int n
     case NID_rc4_40:
     	*cipher = &cipher_rc4_40;
         break;
-#if 0
     case NID_des_cbc:
         *cipher = &cipher_des_cbc;
         break;
     case NID_des_ede3_cbc:
         *cipher = &cipher_des_ede3_cbc;
         break;
-#endif
     case NID_aes_128_cbc:
         *cipher = &cipher_aes_cbc;
         break;
