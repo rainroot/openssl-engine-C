@@ -5,10 +5,9 @@ OBJS= eaes.o eseed.o  \
 	erc4.o \
 	earia.o \
 	edes.o e3des.o \
-	esha.o esha256.o \
+	esha.o esha256.o esha512.o \
 	openssl_engine.o
 
-	#esha.o \ #esha256.o esha512.o  
 LIBNAME=libopenssl_engine.so
 LIB=libopenssl_engine.so
 
