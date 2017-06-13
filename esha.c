@@ -21,7 +21,6 @@ int sha1_init(EVP_MD_CTX *ctx)
 	c->h3 = INIT_DATA_h3;
 	c->h4 = INIT_DATA_h4;
 	return 1;
-//    return SHA1_Init(ctx->md_data);
 }
 
 static void SHA1_BLOCK_DATA_ORDER(SHA_CTX *c, const void *p, size_t num)
@@ -127,7 +126,6 @@ int sha1_update(EVP_MD_CTX *ctx, const void *data_, size_t len)
         memcpy(p, data, len);
     }
     return 1;
-//    return SHA1_Update(ctx->md_data, data, count);
 }
 
 int sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
@@ -157,5 +155,4 @@ int sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
     HASH_MAKE_STRING(c, md);
 
     return 1;
-//    return SHA1_Final(md, ctx->md_data);
 }
