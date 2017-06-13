@@ -2,6 +2,15 @@
 #include <eopenssl_common.h>
 #include <rainroot_eopenssl.h>
 
+#define HASH_MAKE_STRING(c,s)   do {    \
+        unsigned long ll;               \
+        ll=(c)->h0; (void)HOST_l2c(ll,(s));     \
+        ll=(c)->h1; (void)HOST_l2c(ll,(s));     \
+        ll=(c)->h2; (void)HOST_l2c(ll,(s));     \
+        ll=(c)->h3; (void)HOST_l2c(ll,(s));     \
+        ll=(c)->h4; (void)HOST_l2c(ll,(s));     \
+        } while (0)
+
 int sha1_init(EVP_MD_CTX *ctx)
 {
 	SHA_CTX *c = ctx->md_data;
