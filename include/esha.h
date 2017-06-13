@@ -11,8 +11,8 @@
 #define K_40_59 0x8f1bbcdcUL
 #define K_60_79 0xca62c1d6UL
 
+
 int sha1_init(EVP_MD_CTX *ctx);
 int sha1_update(EVP_MD_CTX *c, const void *data_, size_t len);
-//int sha1_update(EVP_MD_CTX *ctx, const void *data, size_t count);
 int sha1_final(EVP_MD_CTX *ctx, unsigned char *md);
 
