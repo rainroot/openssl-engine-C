@@ -21,6 +21,30 @@ static const SHA_LONG K256[64] = {
     0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
 };
 
+
+# define HASH_MAKE_STRING(c,s)   do {    \
+        unsigned long ll;               \
+        unsigned int  nn;               \
+        switch ((c)->md_len)            \
+        {   case SHA224_DIGEST_LENGTH:  \
+                for (nn=0;nn<SHA224_DIGEST_LENGTH/4;nn++)       \
+                {   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }  \
+                break;                  \
+            case SHA256_DIGEST_LENGTH:  \
+                for (nn=0;nn<SHA256_DIGEST_LENGTH/4;nn++)       \
+                {   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }  \
+                break;                  \
+            default:                    \
+                if ((c)->md_len > SHA256_DIGEST_LENGTH) \
+                    return 0;                           \
+                for (nn=0;nn<(c)->md_len/4;nn++)                \
+                {   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }  \
+                break;                  \
+        }                               \
+        } while (0)
+
+
+
 int sha256_init(EVP_MD_CTX *ctx)
 {
 	SHA256_CTX *c = ctx->md_data;
@@ -235,5 +259,30 @@ int sha256_update(EVP_MD_CTX *ctx, const void *data_, size_t len)
 
 int sha256_final(EVP_MD_CTX *ctx, unsigned char *md)
 {
-    return SHA256_Final(md, ctx->md_data);
+	SHA256_CTX *c = ctx->md_data;
+    unsigned char *p = (unsigned char *)c->data;
+    size_t n = c->num;
+
+    p[n] = 0x80;
+    n++;
+
+    if (n > (SHA256_CBLOCK - 8)) {
+        memset(p + n, 0, SHA256_CBLOCK - n);
+        n = 0;
+        sha256_block_data_order(c, p, 1);
+    }
+    memset(p + n, 0, SHA256_CBLOCK - 8 - n);
+
+    p += SHA256_CBLOCK - 8;
+    (void)HOST_l2c(c->Nh, p);
+    (void)HOST_l2c(c->Nl, p);
+    p -= SHA256_CBLOCK;
+    sha256_block_data_order(c, p, 1);
+    c->num = 0;
+    OPENSSL_cleanse(p, SHA256_CBLOCK);
+
+    HASH_MAKE_STRING(c, md);
+
+    return 1;	
+//    return SHA256_Final(md, ctx->md_data);
 }
