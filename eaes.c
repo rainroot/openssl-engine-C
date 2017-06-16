@@ -346,19 +346,24 @@ int aes_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY *k
     int i = 0;
     u32 temp;
 
-    if (!userKey || !key)
+    if (!userKey || !key) {
         return -1;
-    if (bits != 128 && bits != 192 && bits != 256)
+	}
+    if (bits != 128 && bits != 192 && bits != 256) {
         return -2;
+	}
 
     rk = key->rd_key;
 
-    if (bits==128)
+    if (bits==128) {
         key->rounds = 10;
-    else if (bits==192)
+	}
+    else if (bits==192) {
         key->rounds = 12;
-    else
+	}
+    else {
         key->rounds = 14;
+	}
 
     rk[0] = GETU32(userKey     );
     rk[1] = GETU32(userKey +  4);
@@ -444,8 +449,9 @@ int aes_set_decrypt_key(const unsigned char *userKey, const int bits, AES_KEY *k
     u32 temp;
 
     status = aes_set_encrypt_key(userKey, bits, key);
-    if (status < 0)
+    if (status < 0) {
         return status;
+	}
 
     rk = key->rd_key;
 
@@ -462,21 +468,16 @@ int aes_set_decrypt_key(const unsigned char *userKey, const int bits, AES_KEY *k
 
             tp1 = rk[j];
             m = tp1 & 0x80808080;
-            tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+            tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^ ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp2 & 0x80808080;
-            tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+            tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^ ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp4 & 0x80808080;
-            tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+            tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^ ((m - (m >> 7)) & 0x1b1b1b1b);
             tp9 = tp8 ^ tp1;
             tpb = tp9 ^ tp2;
             tpd = tp9 ^ tp4;
             tpe = tp8 ^ tp4 ^ tp2;
-            rk[j] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^
-                (tp9 >> 24) ^ (tp9 << 8) ^
-                (tpb >> 8) ^ (tpb << 24);
+            rk[j] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^ (tp9 >> 24) ^ (tp9 << 8) ^ (tpb >> 8) ^ (tpb << 24);
         }
     }
     return 0;
@@ -485,29 +486,27 @@ int aes_set_decrypt_key(const unsigned char *userKey, const int bits, AES_KEY *k
 int aes_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc)
 {
 	if(iv){}
-	printf("# %s %d #\n",__func__,__LINE__);
     fprintf(stderr, "(ENGINE_OPENSSL_AES) aes_init_key() called\n");
 
     int ret, mode;
     EOPENSSL_AES_KEY *dat = (EOPENSSL_AES_KEY *) ctx->cipher_data;
 
     mode = ctx->cipher->flags & EVP_CIPH_MODE;
-    if ((mode == EVP_CIPH_ECB_MODE || mode == EVP_CIPH_CBC_MODE)
-        && !enc)
-        {
-            ret = aes_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
-            dat->block = (block128_f) aes_decrypt;
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) aes_cbc_cipher : NULL;
-    } else
+    if ((mode == EVP_CIPH_ECB_MODE || mode == EVP_CIPH_CBC_MODE) && !enc)
+    {
+        ret = aes_set_decrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
+        dat->block = (block128_f) aes_decrypt;
+    	dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ? (cbc128_f) aes_cbc_cipher : NULL;
+    } 
+	else
     {
         ret = aes_set_encrypt_key(key, ctx->key_len * 8, &dat->ks.ks);
         dat->block = (block128_f) aes_encrypt;
-        dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) aes_cbc_cipher : NULL;
+        dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ? (cbc128_f) aes_cbc_cipher : NULL;
 # ifdef AES_CTR_ASM
-        if (mode == EVP_CIPH_CTR_MODE)
+        if (mode == EVP_CIPH_CTR_MODE) {
             dat->stream.ctr = (ctr128_f) AES_ctr32_encrypt;
+		}
 # endif
     }
 
@@ -525,14 +524,17 @@ static void prefetch256(const void *table)
     unsigned long sum;
     int i;
 
-    for (sum=0,i=0;i<256/sizeof(t[0]);i+=32/sizeof(t[0]))   sum ^= t[i];
+    for (sum=0,i=0;i<256/sizeof(t[0]);i+=32/sizeof(t[0])) {
+	   sum ^= t[i];
+	}
 
     ret = sum;
+	if(ret){}
 }
 
 void aes_encrypt(const unsigned char *in, unsigned char *out, const AES_KEY *key)
 {
-
+    fprintf(stderr, "(ENGINE_OPENSSL_AES) aes_encrypt() called\n");
     const u32 *rk;
     u32 s0, s1, s2, s3, t[4];
     int r;
@@ -709,22 +711,23 @@ void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out, size_t l
     const unsigned char *iv = ivec;
 
     fprintf(stderr, "(ENGINE_OPENSSL_AES) CRYPTO_cbc128_encrypt() called\n");
-    if (STRICT_ALIGNMENT &&
-        ((size_t)in | (size_t)out | (size_t)ivec) % sizeof(size_t) != 0) {
+    if (STRICT_ALIGNMENT && ((size_t)in | (size_t)out | (size_t)ivec) % sizeof(size_t) != 0) {
         while (len >= 16) {
-            for (n = 0; n < 16; ++n)
+            for (n = 0; n < 16; ++n) {
                 out[n] = in[n] ^ iv[n];
+			}
             (*block) (out, out, key);
             iv = out;
             len -= 16;
             in += 16;
             out += 16;
         }
-    } else {
+    } 
+	else {
         while (len >= 16) {
-            for (n = 0; n < 16; n += sizeof(size_t))
-                *(size_t *)(out + n) =
-                    *(size_t *)(in + n) ^ *(size_t *)(iv + n);
+            for (n = 0; n < 16; n += sizeof(size_t)) {
+                *(size_t *)(out + n) = *(size_t *)(in + n) ^ *(size_t *)(iv + n);
+			}
             (*block) (out, out, key);
             iv = out;
             len -= 16;
@@ -733,14 +736,17 @@ void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out, size_t l
         }
     }
     while (len) {
-        for (n = 0; n < 16 && n < len; ++n)
+        for (n = 0; n < 16 && n < len; ++n) {
             out[n] = in[n] ^ iv[n];
-        for (; n < 16; ++n)
+		}
+        for (; n < 16; ++n) {
             out[n] = iv[n];
+		}
         (*block) (out, out, key);
         iv = out;
-        if (len <= 16)
+        if (len <= 16) {
             break;
+		}
         len -= 16;
         in += 16;
         out += 16;
@@ -760,24 +766,26 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out, size_t l
     if (in != out) {
         const unsigned char *iv = ivec;
 
-        if (STRICT_ALIGNMENT &&
-            ((size_t)in | (size_t)out | (size_t)ivec) % sizeof(size_t) != 0) {
+        if (STRICT_ALIGNMENT && ((size_t)in | (size_t)out | (size_t)ivec) % sizeof(size_t) != 0) {
             while (len >= 16) {
                 (*block) (in, out, key);
-                for (n = 0; n < 16; ++n)
+                for (n = 0; n < 16; ++n) {
                     out[n] ^= iv[n];
+				}
                 iv = in;
                 len -= 16;
                 in += 16;
                 out += 16;
             }
-        } else if (16 % sizeof(size_t) == 0) { 
+        } 
+		else if (16 % sizeof(size_t) == 0) { 
             while (len >= 16) {
                 size_t *out_t = (size_t *)out, *iv_t = (size_t *)iv;
 
                 (*block) (in, out, key);
-                for (n = 0; n < 16 / sizeof(size_t); n++)
+                for (n = 0; n < 16 / sizeof(size_t); n++) {
                     out_t[n] ^= iv_t[n];
+				}
                 iv = in;
                 len -= 16;
                 in += 16;
@@ -785,7 +793,8 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out, size_t l
             }
         }
         memcpy(ivec, iv, 16);
-    } else {
+    } 
+	else {
         if (STRICT_ALIGNMENT &&
             ((size_t)in | (size_t)out | (size_t)ivec) % sizeof(size_t) != 0) {
             unsigned char c;
@@ -800,7 +809,8 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out, size_t l
                 in += 16;
                 out += 16;
             }
-        } else if (16 % sizeof(size_t) == 0) { 
+        } 
+	else if (16 % sizeof(size_t) == 0) { 
             while (len >= 16) {
                 size_t c, *out_t = (size_t *)out, *ivec_t = (size_t *)ivec;
                 const size_t *in_t = (const size_t *)in;
@@ -826,8 +836,9 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out, size_t l
             ivec[n] = c;
         }
         if (len <= 16) {
-            for (; n < 16; ++n)
+            for (; n < 16; ++n) {
                 ivec[n] = in[n];
+			}
             break;
         }
         len -= 16;
@@ -842,7 +853,6 @@ int aes_cbc_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char 
 
     EOPENSSL_AES_KEY *dat = (EOPENSSL_AES_KEY *) ctx->cipher_data;
 
-	printf("# %s %d #\n",__func__,__LINE__);
 #if 0
     if (dat->stream.cbc) {
 	printf("# %s %d #\n",__func__,__LINE__);
@@ -850,11 +860,9 @@ int aes_cbc_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char 
 	}else
 #endif
     if (ctx->encrypt) {
-	printf("# %s %d #\n",__func__,__LINE__);
         CRYPTO_cbc128_encrypt(in, out, len, &dat->ks, ctx->iv, dat->block);
 	}
     else {
-	printf("# %s %d #\n",__func__,__LINE__);
         CRYPTO_cbc128_decrypt(in, out, len, &dat->ks, ctx->iv, dat->block);
 	}
 
@@ -863,18 +871,19 @@ int aes_cbc_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char 
 
 int aes_ecb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t len)
 {
-	printf("# %s %d #\n",__func__,__LINE__);
     fprintf(stderr, "(ENGINE_OPENSSL_AES) aes_ecb_cipher() called\n");
 
     size_t bl = ctx->cipher->block_size;
     size_t i;
     EOPENSSL_AES_KEY *dat = (EOPENSSL_AES_KEY *) ctx->cipher_data;
 
-    if (len < bl)
+    if (len < bl) {
         return 1;
+	}
 
-    for (i = 0, len -= bl; i <= len; i += bl)
+    for (i = 0, len -= bl; i <= len; i += bl) {
         (*dat->block) (in + i, out + i, &dat->ks);
+	}
 
     return 1;
 }
